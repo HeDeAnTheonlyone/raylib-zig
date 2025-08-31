@@ -4,6 +4,8 @@ const std = @import("std");
 const this = @This();
 const rl = @import("raylib");
 
+pub const raylib_module = @import("lib/raylib.zig");
+
 pub const emcc = @import("emcc.zig");
 
 pub const Options = rl.Options;
