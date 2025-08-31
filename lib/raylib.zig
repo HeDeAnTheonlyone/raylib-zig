@@ -1,6 +1,7 @@
 // raylib-zig (c) Nikolas Wipper 2023
 
 const rl = @This();
+pub const raylib = rl;
 const std = @import("std");
 
 pub const cdef = @import("raylib-ext.zig");
