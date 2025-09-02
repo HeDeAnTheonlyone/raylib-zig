@@ -51,6 +51,10 @@ pub const Vector2 = extern struct {
         return Vector2{ .x = x, .y = y };
     }
 
+    pub fn splat(scalar: f32) Vector2 {
+        return Vector2{ .x = scalar, .y = scalar};
+    }
+
     /// Vector with components value 0.0
     pub fn zero() Vector2 {
         return math.vector2Zero();
