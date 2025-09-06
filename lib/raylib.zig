@@ -854,6 +854,15 @@ pub const Rectangle = extern struct {
     pub fn getCollision(self: Rectangle, rec2: Rectangle) Rectangle {
         return rl.getCollisionRec(self, rec2);
     }
+
+    pub fn scale(rect: Rectangle, scalar: f32) Rectangle {
+        return Rectangle{
+            .x = rect.x * scalar,
+            .y = rect.y * scalar,
+            .width = rect.width * scalar,
+            .height = rect.height * scalar,
+        };
+    }
 };
 
 pub const Image = extern struct {
