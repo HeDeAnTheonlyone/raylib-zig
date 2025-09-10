@@ -863,6 +863,13 @@ pub const Rectangle = extern struct {
             .height = rect.height * scalar,
         };
     }
+
+    pub fn shift(self: *Rectangle, axis: enum{x, y}, amount: f32) void {
+        switch (axis) {
+            .x => self.x += amount,
+            .y => self.y += amount,
+        }
+    }
 };
 
 pub const Image = extern struct {
