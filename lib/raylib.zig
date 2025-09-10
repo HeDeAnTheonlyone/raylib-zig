@@ -866,8 +866,8 @@ pub const Rectangle = extern struct {
 
     pub fn shift(self: *Rectangle, axis: enum{x, y}, amount: f32) void {
         switch (axis) {
-            .x => self.x += amount,
-            .y => self.y += amount,
+            .x => self.*.x += amount,
+            .y => self.*.y += amount,
         }
     }
 };
