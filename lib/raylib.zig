@@ -855,22 +855,23 @@ pub const Rectangle = extern struct {
         return rl.getCollisionRec(self, rec2);
     }
 
+    /// Scales only width and height. x and y are untouched.
     pub fn scale(rect: Rectangle, scalar: f32) Rectangle {
         return Rectangle{
-            .x = rect.x * scalar,
-            .y = rect.y * scalar,
+            .x = rect.x,
+            .y = rect.y,
             .width = rect.width * scalar,
             .height = rect.height * scalar,
         };
     }
 
     pub fn scaleCentered(rect: Rectangle, scalar: f32) Rectangle {
-        const v_diff = (rect.width - rect.width * scalar) / 2;
-        const h_diff = (rect.height - rect.height * scalar) / 2;
+        const v_diff = (rect.width - rect.width * scalar);
+        const h_diff = (rect.height - rect.height * scalar);
         
         return Rectangle{
-            .x = rect.x + h_diff,
-            .y = rect.y + v_diff,
+            .x = rect.x + h_diff / 2,
+            .y = rect.y + v_diff / 2,
             .width = rect.width - h_diff,
             .height = rect.height - h_diff,
         };
