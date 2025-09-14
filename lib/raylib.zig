@@ -873,7 +873,7 @@ pub const Rectangle = extern struct {
             .x = rect.x + h_diff / 2,
             .y = rect.y + v_diff / 2,
             .width = rect.width - h_diff,
-            .height = rect.height - h_diff,
+            .height = rect.height - v_diff,
         };
     }
 
