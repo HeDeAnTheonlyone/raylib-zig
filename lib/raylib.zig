@@ -866,8 +866,8 @@ pub const Rectangle = extern struct {
     }
 
     pub fn scaleCentered(rect: Rectangle, scalar: f32) Rectangle {
-        const v_diff = (rect.width - rect.width * scalar);
-        const h_diff = (rect.height - rect.height * scalar);
+        const h_diff = (rect.width - rect.width * scalar);
+        const v_diff = (rect.height - rect.height * scalar);
         
         return Rectangle{
             .x = rect.x + h_diff / 2,
