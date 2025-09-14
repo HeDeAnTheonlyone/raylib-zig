@@ -855,8 +855,18 @@ pub const Rectangle = extern struct {
         return rl.getCollisionRec(self, rec2);
     }
 
-    /// Scales only width and height. x and y are untouched.
+    /// Scales all values by the given scalar
     pub fn scale(rect: Rectangle, scalar: f32) Rectangle {
+        return Rectangle{
+            .x = rect.x * scalar,
+            .y = rect.y * scalar,
+            .width = rect.width * scalar,
+            .height = rect.height * scalar,
+        };
+    }
+
+    /// Scales only the width and height and leaves x and y untouched
+    pub fn scaleSize(rect: Rectangle, scalar: f32) Rectangle {
         return Rectangle{
             .x = rect.x,
             .y = rect.y,
