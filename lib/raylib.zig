@@ -864,6 +864,18 @@ pub const Rectangle = extern struct {
         };
     }
 
+    pub fn scaleCentered(rect: Rectangle, scalar: f32) Rectangle {
+        const v_diff = rect.width * scalar / 2;
+        const h_diff = rect.height * scalar / 2;
+        
+        return Rectangle{
+            .x = rect.x + h_diff,
+            .y = rect.y + v_diff,
+            .width = rect.width - h_diff,
+            .height = rect.height - h_diff,
+        };
+    }
+
     pub fn shift(self: *Rectangle, axis: enum{x, y}, amount: f32) void {
         switch (axis) {
             .x => self.*.x += amount,
