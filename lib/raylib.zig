@@ -877,6 +877,20 @@ pub const Rectangle = extern struct {
         };
     }
 
+    pub fn insetCentered(rect: Rectangle, scalar: f32) Rectangle {
+        const h_diff = (rect.width - rect.width * scalar);
+        const v_diff = (rect.height - rect.height * scalar);
+        
+        const diff = @min(@abs(h_diff), @abs(v_diff));
+
+        return Rectangle{
+            .x = rect.x + diff / 2,
+            .y = rect.y + diff / 2,
+            .width = rect.width - diff,
+            .height = rect.height - diff,
+        };
+    }
+
     pub fn shift(self: *Rectangle, axis: enum{x, y}, amount: f32) void {
         switch (axis) {
             .x => self.*.x += amount,
