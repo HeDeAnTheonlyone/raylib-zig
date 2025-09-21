@@ -877,10 +877,10 @@ pub const Rectangle = extern struct {
 
     pub fn scaledDirectionSeparate(rect: Rectangle, vec: Vector2) Rectangle {
         return Rectangle{
-            rect.x * vec.x,
-            rect.y * vec.y,
-            rect.width * vec.x,
-            rect.height * vec.y,
+            .x = rect.x * vec.x,
+            .y = rect.y * vec.y,
+            .width = rect.width * vec.x,
+            .height = rect.height * vec.y,
         };
     }
 
