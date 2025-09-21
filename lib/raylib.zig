@@ -875,6 +875,15 @@ pub const Rectangle = extern struct {
         };
     }
 
+    pub fn scaledDirectionSeparate(rect: Rectangle, vec: Vector2) Rectangle {
+        return Rectangle{
+            rect.x * vec.x,
+            rect.y * vec.y,
+            rect.width * vec.x,
+            rect.height * vec.y,
+        };
+    }
+
     pub fn scaleCentered(rect: Rectangle, scalar: f32) Rectangle {
         const h_diff = (rect.width - rect.width * scalar);
         const v_diff = (rect.height - rect.height * scalar);
