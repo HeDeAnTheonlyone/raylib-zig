@@ -910,10 +910,14 @@ pub const Rectangle = extern struct {
         };
     }
 
-    pub fn shift(self: *Rectangle, axis: enum{x, y}, amount: f32) void {
+    pub fn shift(self: *Rectangle, axis: enum{x, y, xy}, amount: f32) void {
         switch (axis) {
             .x => self.*.x += amount,
             .y => self.*.y += amount,
+            .xy => {
+                self.*.x += amount;
+                self.*.y += amount;
+            },
         }
     }
 };
