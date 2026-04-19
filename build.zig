@@ -6,8 +6,7 @@ const rl = @import("raylib");
 
 pub const raylib_module = @import("lib/raylib.zig");
 
-pub const emcc = @import("emcc.zig");
-
+pub const emsdk = rl.emsdk;
 pub const Options = rl.Options;
 pub const OpenglVersion = rl.OpenglVersion;
 pub const LinuxDisplayBackend = rl.LinuxDisplayBackend;
@@ -29,11 +28,12 @@ fn getRaylib(b: *std.Build, target: std.Build.ResolvedTarget, optimize: std.buil
         .rtext = options.rtext,
         .rtextures = options.rtextures,
         .platform = options.platform,
-        .shared = options.shared,
+        .linkage = options.linkage,
         .linux_display_backend = options.linux_display_backend,
         .opengl_version = options.opengl_version,
         .android_api_version = options.android_api_version,
         .android_ndk = options.android_ndk,
+        .config = options.config,
     });
 
     const raylib = raylib_dep.artifact("raylib");
@@ -41,6 +41,7 @@ fn getRaylib(b: *std.Build, target: std.Build.ResolvedTarget, optimize: std.buil
     const raygui_dep = b.dependency("raygui", .{
         .target = target,
         .optimize = optimize,
+        .link_libc = true,
     });
 
     rl.addRaygui(b, raylib, raygui_dep, options);
@@ -57,6 +58,7 @@ fn getModule(b: *std.Build, target: std.Build.ResolvedTarget, optimize: std.buil
         .root_source_file = b.path("lib/raylib.zig"),
         .target = target,
         .optimize = optimize,
+        .link_libc = true,
     });
 }
 
@@ -68,6 +70,7 @@ const gui = struct {
             .imports = &.{.{ .name = "raylib-zig", .module = raylib }},
             .target = target,
             .optimize = optimize,
+            .link_libc = true,
         });
     }
 };
@@ -79,6 +82,8 @@ pub fn build(b: *std.Build) !void {
     const raylib_artifact = this.getRaylib(b, target, optimize, Options.getOptions(b));
     const raylib = this.getModule(b, target, optimize);
     const raygui = this.gui.getModule(b, target, optimize);
+
+    raylib.linkLibrary(raylib_artifact);
 
     const examples = [_]Program{
         .{
@@ -110,6 +115,16 @@ pub fn build(b: *std.Build) !void {
             .name = "basic_window",
             .path = "examples/core/basic_window.zig",
             .desc = "Creates a basic window with text",
+        },
+        .{
+            .name = "delta_time",
+            .path = "examples/core/delta_time.zig",
+            .desc = "Show how to use frame time (delta time)",
+        },
+        .{
+            .name = "core_monitor_change",
+            .path = "examples/core/core_monitor_change.zig",
+            .desc = "Simple Monitor Manager",
         },
         .{
             .name = "basic_window_web",
@@ -182,9 +197,19 @@ pub fn build(b: *std.Build) !void {
             .desc = "Demonstrates showing and hiding a message box",
         },
         .{
+            .name = "floating_window",
+            .path = "examples/gui/floating_window.zig",
+            .desc = "Demonstrates a floating window",
+        },
+        .{
             .name = "raymarching",
             .path = "examples/shaders/raymarching.zig",
             .desc = "Uses a raymarching in a shader to render shapes",
+        },
+        .{
+            .name = "shaders_ascii_rendering",
+            .path = "examples/shaders/shaders_ascii_rendering.zig",
+            .desc = "Post-processing to render in ASCII",
         },
         .{
             .name = "shaders_basic_pbr",
@@ -361,11 +386,25 @@ pub fn build(b: *std.Build) !void {
             .path = "examples/textures/textures_image_loading.zig",
             .desc = "Image loading and texture creation",
         },
-
         .{
             .name = "models_heightmap",
             .path = "examples/models/models_heightmap.zig",
             .desc = "Heightmap loading and drawing",
+        },
+        .{
+            .name = "models_bone_socket",
+            .path = "examples/models/models_bone_socket.zig",
+            .desc = "Bone socket",
+        },
+        .{
+            .name = "models_box_collisions",
+            .path = "examples/models/models_box_collisions.zig",
+            .desc = "Box collisions",
+        },
+        .{
+            .name = "models_rlgl_solar_system",
+            .path = "examples/models/models_rlgl_solar_system.zig",
+            .desc = "Solar System",
         },
         // .{
         //     .name = "shaders_basic_lighting",
@@ -377,13 +416,13 @@ pub fn build(b: *std.Build) !void {
     const raylib_test = b.addTest(.{
         .root_module = raylib,
     });
-    raylib_test.linkLibC();
+    raylib_test.root_module.link_libc = true;
 
     const raygui_test = b.addTest(.{
         .root_module = raygui,
     });
     raygui_test.root_module.addImport("raylib-zig", raylib);
-    raygui_test.linkLibC();
+    raygui_test.root_module.link_libc = true;
 
     const test_step = b.step("test", "Check for library compilation errors");
     test_step.dependOn(&raylib_test.step);
@@ -392,35 +431,54 @@ pub fn build(b: *std.Build) !void {
     const examples_step = b.step("examples", "Builds all the examples");
 
     for (examples) |ex| {
+        const mod = b.createModule(.{
+            .root_source_file = b.path(ex.path),
+            .target = target,
+            .optimize = optimize,
+        });
+
         if (target.query.os_tag == .emscripten) {
-            const exe_lib = try emcc.compileForEmscripten(b, ex.name, ex.path, target, optimize);
-            exe_lib.root_module.addImport("raylib", raylib);
-            exe_lib.root_module.addImport("raygui", raygui);
+            const wasm = b.addLibrary(.{
+                .name = ex.name,
+                .root_module = mod,
+            });
+            wasm.root_module.addImport("raylib", raylib);
+            wasm.root_module.addImport("raygui", raygui);
 
-            // Note that raylib itself isn't actually added to the exe_lib
-            // output file, so it also needs to be linked with emscripten.
-            exe_lib.linkLibrary(raylib_artifact);
-            const link_step = try emcc.linkWithEmscripten(b, &[_]*std.Build.Step.Compile{ exe_lib, raylib_artifact });
-            link_step.addArg("--emrun");
-            link_step.addArg("--embed-file");
-            link_step.addArg("resources/");
+            const install_dir: std.Build.InstallDir = .{ .custom = "web" };
+            const emcc_flags = emsdk.emccDefaultFlags(b.allocator, .{
+                .optimize = optimize,
+                .asyncify = !std.mem.endsWith(u8, ex.name, "web"),
+            });
+            const emcc_settings = emsdk.emccDefaultSettings(b.allocator, .{
+                .optimize = optimize,
+            });
 
-            const run_step = try emcc.emscriptenRunStep(b);
-            run_step.step.dependOn(&link_step.step);
+            const emcc_step = emsdk.emccStep(b, raylib_artifact, wasm, .{
+                .optimize = optimize,
+                .flags = emcc_flags,
+                .settings = emcc_settings,
+                .shell_file_path = emsdk.shell(b),
+                .install_dir = install_dir,
+                .embed_paths = &.{.{ .src_path = "resources/" }},
+            });
+
+            const html_filename = try std.fmt.allocPrint(b.allocator, "{s}.html", .{wasm.name});
+            const emrun_step = emsdk.emrunStep(
+                b,
+                b.getInstallPath(install_dir, html_filename),
+                &.{},
+            );
+            emrun_step.dependOn(emcc_step);
+
             const run_option = b.step(ex.name, ex.desc);
-
-            run_option.dependOn(&run_step.step);
-            examples_step.dependOn(&exe_lib.step);
+            run_option.dependOn(emrun_step);
+            examples_step.dependOn(emcc_step);
         } else {
             const exe = b.addExecutable(.{
                 .name = ex.name,
-                .root_module = b.createModule(.{
-                    .root_source_file = b.path(ex.path),
-                    .target = target,
-                    .optimize = optimize,
-                }),
+                .root_module = mod,
             });
-            exe.linkLibrary(raylib_artifact);
             exe.root_module.addImport("raylib", raylib);
             exe.root_module.addImport("raygui", raygui);
 
